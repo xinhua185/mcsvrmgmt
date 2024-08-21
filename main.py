@@ -18,7 +18,14 @@ try:
 except:
     config={
         "jre":[],
-        "server":[]
+        "server":[],
+        "lastselect":{
+            "javapath":"",
+            "serverpath":"",
+            "workdir":"",
+            "name":"",
+            "nogui":True
+        }
     }
 def envset():
     def addjre():
@@ -79,7 +86,7 @@ def editserver(serverconfig=None):
         global index
         config["server"].append(serverconfig)
         editserver_win.destroy()
-        serverbtnlist.append(tkinter.ttk.Button(serverbtnmgmt,text=serverconfig["name"],command=lambda:select(serverconfig)))
+        serverbtnlist.append(tkinter.ttk.Radiobutton(serverbtnmgmt,text=i["name"],variable=servervar,value=i,command=select))
         serverbtnmgmt.add(serverbtnlist[index])
         index+=1
     tkinter.ttk.Button(editserver_win,text="保存并退出",command=saveandexit).pack()
@@ -96,27 +103,27 @@ serverbtnmgmt.pack(side=tkinter.LEFT)
 serverbtnlist=[]
 targetserver=None
 def launch():
-    # print(targetserver)
-    if(targetserver["nogui"]==1):
-        p=subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'" --nogui',shell=True,cwd=targetserver["workdir"],stderr=subprocess.PIPE,stdout=subprocess.STDOUT)
+    if(bool(targetserver["nogui"])==True):
+        subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'" --nogui',shell=True,cwd=targetserver["workdir"])
     else:
-        p=subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"',shell=True,cwd=targetserver["workdir"],stderr=subprocess.PIPE,stdout=subprocess.STDOUT)
-    tkinter.messagebox.showerror("服务器错误",p.stderr.readline())
+        subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"',shell=True,cwd=targetserver["workdir"])
 def delserver():
     global targetserver
     serverbtnmgmt.forget(serverbtnlist[config["server"].index(targetserver)])
     config["server"].remove(targetserver)
     targetserver=None
-def select(server):
+def select():
     global targetserver
-    targetserver=server
+    server=servervar.get()
+    targetserver=eval(server)
 launchbtn=tkinter.ttk.Button(win,text="启动",command=launch)
 launchbtn.pack()
 delbtn=tkinter.ttk.Button(win,text="删除此配置",command=delserver)
 delbtn.pack()
 index=0
+servervar=tkinter.StringVar()
 for i in config["server"]:
-    serverbtnlist.append(tkinter.ttk.Button(serverbtnmgmt,text=i["name"],command=lambda:select(i)))
+    serverbtnlist.append(tkinter.ttk.Radiobutton(serverbtnmgmt,text=i["name"],variable=servervar,value=i,command=select))
     serverbtnmgmt.add(serverbtnlist[index])
     index+=1
 win.resizable(0,0)
