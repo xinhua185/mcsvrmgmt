@@ -19,13 +19,7 @@ except:
     config={
         "jre":[],
         "server":[],
-        "lastselect":{
-            "javapath":"",
-            "serverpath":"",
-            "workdir":"",
-            "name":"",
-            "nogui":True
-        }
+        "useshell":1
     }
 def envset():
     def addjre():
@@ -41,10 +35,11 @@ def envset():
     for i in config["jre"]:
         btn=tkinter.ttk.Button(envset_win,text="删除"+i,command=lambda:deljre(i,btn))
         btn.pack()
-def editserver(serverconfig=None):
+def editserver(editing=False):
     editserver_win=tkinter.Toplevel()
+    targetindex=config["server"].index(targetserver)
     #服务端默认配置
-    if(serverconfig==None):
+    if(editing==False):
         serverconfig={
             "javapath":"",
             "serverpath":"",
@@ -52,6 +47,9 @@ def editserver(serverconfig=None):
             "name":"",
             "nogui":1
         }
+    #使用已选的配置
+    else:
+        serverconfig=targetserver
     #java路径
     tkinter.ttk.Label(editserver_win,text="Java路径").pack()
     javavar=tkinter.StringVar()
@@ -80,15 +78,20 @@ def editserver(serverconfig=None):
     noguibtn.pack()
     #保存并退出
     def saveandexit():
-        if(serverconfig in config["server"]):
-            tkinter.messagebox.showerror("错误","不要重复添加服务端配置")
-            return
-        global index
-        config["server"].append(serverconfig)
         editserver_win.destroy()
-        serverbtnlist.append(tkinter.ttk.Radiobutton(serverbtnmgmt,text=i["name"],variable=servervar,value=i,command=select))
-        serverbtnmgmt.add(serverbtnlist[index])
-        index+=1
+        global index
+        #将新配置添加到列表中
+        if(editing==False):
+            if(serverconfig in config["server"]):
+                tkinter.messagebox.showerror("错误","不要重复添加服务端配置")
+                return
+            config["server"].append(serverconfig)
+            serverbtnlist.append(tkinter.ttk.Radiobutton(serverbtnmgmt,text=serverconfig["name"],variable=servervar,value=serverconfig,command=select))
+            serverbtnmgmt.add(serverbtnlist[index])
+            index+=1
+        #改变当前配置
+        else:
+            config["server"][targetindex]=serverconfig
     tkinter.ttk.Button(editserver_win,text="保存并退出",command=saveandexit).pack()
 menu=tkinter.Menu(win)
 win.config(menu=menu)
@@ -103,10 +106,15 @@ serverbtnmgmt.pack(side=tkinter.LEFT)
 serverbtnlist=[]
 targetserver=None
 def launch():
+    cmd='"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"'
+    useshell=False
+    print(cmd)
     if(bool(targetserver["nogui"])==True):
-        subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'" --nogui',shell=True,cwd=targetserver["workdir"])
-    else:
-        subprocess.Popen('"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"',shell=True,cwd=targetserver["workdir"])
+        cmd+=' --nogui'
+    if(config["useshell"]==1):
+        useshell=True
+    print(cmd)
+    subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
 def delserver():
     global targetserver
     serverbtnmgmt.forget(serverbtnlist[config["server"].index(targetserver)])
@@ -118,8 +126,10 @@ def select():
     targetserver=eval(server)
 launchbtn=tkinter.ttk.Button(win,text="启动",command=launch)
 launchbtn.pack()
-delbtn=tkinter.ttk.Button(win,text="删除此配置",command=delserver)
+delbtn=tkinter.ttk.Button(win,text="删除配置",command=delserver)
 delbtn.pack()
+editbtn=tkinter.ttk.Button(win,text="编辑配置",command=lambda:editserver(True))
+editbtn.pack()
 index=0
 servervar=tkinter.StringVar()
 for i in config["server"]:
