@@ -6,7 +6,7 @@ import PIL.ImageTk
 import easygui
 import tkinter.ttk
 import json
-import os
+import os,sys
 import PIL
 win=tkinter.Tk()
 win.title("服务器管理")
@@ -19,7 +19,7 @@ except:
     config={
         "jre":[],
         "server":[],
-        "useshell":1
+        "useshell":True
     }
 def envset():
     def addjre():
@@ -36,6 +36,9 @@ def envset():
         btn=tkinter.ttk.Button(envset_win,text="删除"+i,command=lambda:deljre(i,btn))
         btn.pack()
 def editserver(editing=False):
+    if(targetserver==None):
+        tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
+        return
     editserver_win=tkinter.Toplevel()
     targetindex=config["server"].index(targetserver)
     #服务端默认配置
@@ -45,7 +48,7 @@ def editserver(editing=False):
             "serverpath":"",
             "workdir":"",
             "name":"",
-            "nogui":1
+            "nogui":True
         }
     #使用已选的配置
     else:
@@ -106,17 +109,23 @@ serverbtnmgmt.pack(side=tkinter.LEFT)
 serverbtnlist=[]
 targetserver=None
 def launch():
+    if(targetserver==None):
+        tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
+        return
     cmd='"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"'
-    useshell=False
-    print(cmd)
+    # print(cmd)
     if(bool(targetserver["nogui"])==True):
         cmd+=' --nogui'
-    if(config["useshell"]==1):
-        useshell=True
-    print(cmd)
-    subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
+    # if(sys.platform=='win32'):
+    #     cmd='start cmd /C "'+cmd+'"'
+    # print(cmd)
+    # subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
+    subprocess.Popen('python '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd)
 def delserver():
     global targetserver
+    if(targetserver==None):
+        tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
+        return
     serverbtnmgmt.forget(serverbtnlist[config["server"].index(targetserver)])
     config["server"].remove(targetserver)
     targetserver=None
