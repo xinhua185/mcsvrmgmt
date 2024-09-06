@@ -36,11 +36,7 @@ def envset():
         btn=tkinter.ttk.Button(envset_win,text="删除"+i,command=lambda:deljre(i,btn))
         btn.pack()
 def editserver(editing=False):
-    if(targetserver==None):
-        tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
-        return
     editserver_win=tkinter.Toplevel()
-    targetindex=config["server"].index(targetserver)
     #服务端默认配置
     if(editing==False):
         serverconfig={
@@ -52,6 +48,10 @@ def editserver(editing=False):
         }
     #使用已选的配置
     else:
+        if(targetserver==None):
+            tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
+            return
+        targetindex=config["server"].index(targetserver)
         serverconfig=targetserver
     #java路径
     tkinter.ttk.Label(editserver_win,text="Java路径").pack()
@@ -116,11 +116,12 @@ def launch():
     # print(cmd)
     if(bool(targetserver["nogui"])==True):
         cmd+=' --nogui'
-    # if(sys.platform=='win32'):
-    #     cmd='start cmd /C "'+cmd+'"'
-    # print(cmd)
-    # subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
-    subprocess.Popen('python '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd)
+    if(sys.platform=='win32'):
+        cmd='start "'+targetserver["name"]+'" '+cmd
+        print(cmd)
+        subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
+    else:
+        subprocess.Popen('python '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd+' "'+targetserver["workdir"]+'"')
 def delserver():
     global targetserver
     if(targetserver==None):
