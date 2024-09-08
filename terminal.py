@@ -1,3 +1,4 @@
+#coding=utf-8
 import subprocess,threading
 import tkinter.messagebox
 import tkinter.scrolledtext

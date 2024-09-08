@@ -5,3 +5,4 @@ main.exe
 main.cpp
 cython_debug/cython_debug_info_main
 cython_debug/interpreter
+.vscode/tasks.json
