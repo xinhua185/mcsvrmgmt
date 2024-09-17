@@ -25,6 +25,9 @@ except:
 def envset():
     def addjre():
         jre=easygui.fileopenbox("选择Java路径","打开","java.exe")
+        if(jre==None):
+            tkinter.messagebox.showerror("错误","请选择一个有效的java.exe")
+            return
         config["jre"].append(jre)
         btn=tkinter.ttk.Button(envset_win,text="删除"+jre,command=lambda:deljre(jre,btn))
         btn.pack()
@@ -83,6 +86,9 @@ def editserver(editing=False):
     #保存并退出
     def saveandexit():
         editserver_win.destroy()
+        if(serverconfig["javapath"]=="" or serverconfig["serverpath"]=="" or serverconfig["workdir"]=="" or serverconfig["name"]==""):
+            tkinter.messagebox.showerror("错误","无效配置")
+            return
         global index
         #将新配置添加到列表中
         if(editing==False):
