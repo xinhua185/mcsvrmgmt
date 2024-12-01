@@ -40,7 +40,6 @@ def envset():
         btn=tkinter.ttk.Button(envset_win,text="删除"+i,command=lambda:deljre(i,btn))
         btn.pack()
 def editserver(editing=False):
-    editserver_win=tkinter.Toplevel()
     #服务端默认配置
     if(editing==False):
         serverconfig={
@@ -57,6 +56,7 @@ def editserver(editing=False):
             return
         targetindex=config["server"].index(targetserver)
         serverconfig=targetserver
+    editserver_win=tkinter.Toplevel()
     #java路径
     tkinter.ttk.Label(editserver_win,text="Java路径").pack()
     javavar=tkinter.StringVar()
@@ -72,6 +72,9 @@ def editserver(editing=False):
     #server路径
     def selectserver():
         serverconfig["serverpath"]=easygui.fileopenbox("选择一个服务端文件","打开","*.jar")
+        if(serverconfig["serverpath"]==None):
+            tkinter.messagebox.showerror("错误","请选择一个服务端文件")
+            return
         serverconfig["name"]=os.path.basename(serverconfig["serverpath"])
         serverconfig["workdir"]=os.path.dirname(serverconfig["serverpath"])
         serverbtn.config(text="服务器路径:"+serverconfig["serverpath"])
