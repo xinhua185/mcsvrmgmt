@@ -10,8 +10,8 @@ import json
 import os,sys
 import PIL
 win=tkinter.Tk()
-win.title("服务器管理")
-win.geometry('1050x590')
+win.title("服务端管理")
+win.geometry('500x300')
 #读取配置文件
 try:
     config=json.load(open("config.json",'r'))
@@ -19,9 +19,16 @@ try:
 except:
     config={
         "jre":[],
-        "server":[],
-        "useshell":True
+        "server":[]
     }
+def customset():
+    global bg
+    config["custom"]["bg"]=easygui.fileopenbox("选择背景图片","打开","",["*.jpg","*.jpeg","*.png","*.bmp","*.gif"])
+    if(config["custom"]["bg"]==None):
+        bg=None
+    else:
+        bg=PIL.ImageTk.PhotoImage(PIL.Image.open(config["custom"]["bg"]))
+    bglable.config(image=bg)
 def envset():
     def addjre():
         jre=easygui.fileopenbox("选择Java路径","打开","java.exe")
@@ -110,9 +117,14 @@ menu=tkinter.Menu(win)
 win.config(menu=menu)
 menu.add_command(label="jre环境管理",command=envset)
 menu.add_command(label="添加新服务端",command=editserver)
+menu.add_command(label="个性化",command=customset)
 #加载背景图片
-bg=PIL.ImageTk.PhotoImage(PIL.Image.open("bg.png"))
-tkinter.ttk.Label(win,image=bg).place(x=0,y=0)
+if(config["custom"]["bg"]!=None):
+    bg=PIL.ImageTk.PhotoImage(PIL.Image.open(config["custom"]["bg"]))
+else:
+    bg=None
+bglable=tkinter.ttk.Label(win,image=bg)
+bglable.place(x=0,y=0)
 #服务端管理
 serverbtnmgmt=tkinter.PanedWindow(win,orient=tkinter.VERTICAL)
 serverbtnmgmt.pack(side=tkinter.LEFT)
@@ -122,16 +134,23 @@ def launch():
     if(targetserver==None):
         tkinter.messagebox.showerror("错误","请选择一个服务端配置文件")
         return
-    cmd='"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"'
+    if(sys.platform=='win32'):
+        javaw=os.path.join(os.path.dirname(targetserver["javapath"]),'javaw.exe')
+        cmd='"'+javaw+'" -jar "'+targetserver["serverpath"]+'"'
+    else:
+        cmd='"'+targetserver["javapath"]+'" -jar "'+targetserver["serverpath"]+'"'
     # print(cmd)
     if(bool(targetserver["nogui"])==True):
         cmd+=' --nogui'
-    if(sys.platform=='win32'):
+    if(config["shell"]=="cmd"):
         cmd='start "'+targetserver["name"]+'" '+cmd
         print(cmd)
         subprocess.Popen(cmd,shell=True,cwd=os.path.dirname(targetserver["serverpath"]),start_new_session=True)
-    else:
-        subprocess.Popen('python '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd+' "'+targetserver["workdir"]+'"')
+    elif(config["shell"]=="internal"):
+        if(sys.platform=='win32'):
+            subprocess.Popen('pythonw '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd+' "'+targetserver["workdir"]+'"')
+        else:
+            subprocess.Popen('python '+os.path.join(os.getcwd(),'terminal.py')+' '+cmd+' "'+targetserver["workdir"]+'"')
 def delserver():
     global targetserver
     if(targetserver==None):
@@ -156,6 +175,6 @@ for i in config["server"]:
     serverbtnlist.append(tkinter.ttk.Radiobutton(serverbtnmgmt,text=i["name"],variable=servervar,value=i,command=select))
     serverbtnmgmt.add(serverbtnlist[index])
     index+=1
-win.resizable(0,0)
+#win.resizable(0,0)
 win.mainloop()
 json.dump(config,open("config.json","w"))

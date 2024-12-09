@@ -4,7 +4,7 @@ import tkinter.messagebox
 import tkinter.scrolledtext
 import tkinter
 import tkinter.ttk
-import easygui,sys
+import easygui,sys,os
 cmdlist=sys.argv
 cmdlist.pop(0)
 cwd=cmdlist[len(cmdlist)-1]
@@ -23,21 +23,25 @@ def readerr():
         text.tag_config('stderr',foreground='red')
         # txt=process.stderr.readline().decode("utf-8",'ignore')
         txt=process.stderr.readline().decode("utf-8",'ignore')
-        if(txt==None):
-            return
+        #if(txt==None):
+            #return
         text.config(state='normal')
         text.insert('end',txt,'stderr')
         text.config(state='disabled')
+        text.see(tkinter.END)
+        text.update()
 def readout():
     while process.poll()==None:
         text.tag_config('stdout',foreground='black')
         # txt=process.stdout.readline().decode("utf-8",'ignore')
         txt=process.stdout.readline().decode("utf-8",'ignore')
-        if(txt==None):
-            return
+        #if(txt==None):
+            #sreturn
         text.config(state='normal')
         text.insert('end',txt,'stdout')
         text.config(state='disabled')
+        text.see(tkinter.END)
+        text.update()
 def writein():
     # while True:
         if process.poll()!=None:
@@ -53,7 +57,11 @@ def writein():
 def isquit():
     while process.poll()==None:
         pass
-    tkinter.messagebox.showinfo("提示","服务器已退出,返回代码为:"+str(process.poll()))
+    opt=tkinter.messagebox.askokcancel("提示","服务端已退出,返回代码为:"+str(process.poll()))
+    if(opt==True):
+        os._exit(0)
+    else:
+        return
 cmdvalue=tkinter.StringVar()
 cmdbox=tkinter.ttk.Entry(win,textvariable=cmdvalue)
 cmdbox.pack()
@@ -68,6 +76,7 @@ errthread.daemon=outthread.daemon=protectthread.daemon=True
 errthread.start()
 outthread.start()
 protectthread.start()
+win.title("终端")
 # inthread.start()
 # process.wait()
 win.mainloop()
